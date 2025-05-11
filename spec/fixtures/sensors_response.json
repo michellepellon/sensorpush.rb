@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "sensor_abc": {
+    "id": "sensor_abc",
+    "name": "Living Room Sensor",
+    "active": true,
+    "address": "00:11:22:33:44:55",
+    "battery_voltage": 2.85,
+    "deviceId": "HT1_001122334455"
+  },
+  "sensor_def": {
+    "id": "sensor_def",
+    "name": "Bedroom Sensor",
+    "active": true,
+    "address": "AA:BB:CC:DD:EE:FF",
+    "battery_voltage": 2.1,
+    "deviceId": "HT1_AABBCCDDEEFF"
+  }
+}

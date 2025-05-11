@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "total_samples": 2,
+  "total_sensors": 1,
+  "sensors": {
+    "sensor_abc": [
+      {
+        "observed": "2023-04-15T12:00:00Z",
+        "temperature": 21.5,
+        "humidity": 45.2
+      },
+      {
+        "observed": "2023-04-15T12:15:00Z",
+        "temperature": 21.7,
+        "humidity": 44.8
+      }
+    ]
+  }
+}

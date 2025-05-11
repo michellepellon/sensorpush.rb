@@ -38,18 +38,29 @@ module Sensorpush
     # @return [Array<Sensorpush::Gateway>] list of gateway objects
     def gateways
       response = api_post('/devices/gateways')
-      response.map do |_key, attributes|
-        Sensorpush::Gateway.new(attributes)
-      end
+      parse_device_response(response, Sensorpush::Gateway)
     end
 
     # Retrieve all sensors associated with the account
     # @return [Array<Sensorpush::Sensor>] list of sensor objects
     def sensors
       response = api_post('/devices/sensors')
-      response.map do |_key, attributes|
-        Sensorpush::Sensor.new(attributes)
+      parse_device_response(response, Sensorpush::Sensor)
+    end
+
+    # Parse API response for device endpoints
+    # @param response [Hash] API response
+    # @param klass [Class] the class to instantiate for each device
+    # @return [Array] list of device objects
+    def parse_device_response(response, klass)
+      result = []
+      response.each do |key, attributes|
+        next if key == 'status'
+
+        attributes['id'] = key unless attributes.key?('id')
+        result << klass.new(attributes)
       end
+      result
     end
 
     # Retrieve samples for a specific sensor

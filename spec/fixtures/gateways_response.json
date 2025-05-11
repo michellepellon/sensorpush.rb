@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "gw_123": {
+    "id": "gw_123",
+    "name": "Living Room Gateway",
+    "version": "1.2.3",
+    "message": "OK",
+    "last_seen": "2023-04-15T12:30:45Z",
+    "last_alert": "2023-04-10T08:15:20Z"
+  },
+  "gw_456": {
+    "id": "gw_456",
+    "name": "Bedroom Gateway",
+    "version": "1.2.3",
+    "message": "OK",
+    "last_seen": "2023-04-15T12:31:15Z",
+    "last_alert": null
+  }
+}
