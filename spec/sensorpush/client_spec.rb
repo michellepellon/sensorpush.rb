@@ -9,17 +9,58 @@ RSpec.describe Sensorpush::Client do
 
   subject(:client) { described_class.new(username: username, password: password) }
 
-  describe '#initialize' do
-    it 'sets username and password' do
-      expect(client.username).to eq(username)
-      expect(client.password).to eq(password)
-      expect(client.accesstoken).to be_nil
+  describe 'constants' do
+    it 'defines BASE_URL' do
+      expect(described_class::BASE_URL).to eq('https://api.sensorpush.com/api/v1')
     end
 
-    it 'uses an existing accesstoken if provided' do
-      token = 'existing_token'
-      client = described_class.new(accesstoken: token)
-      expect(client.accesstoken).to eq(token)
+    it 'defines DEFAULT_TIMEOUT' do
+      expect(described_class::DEFAULT_TIMEOUT).to eq(30)
+    end
+
+    it 'defines BASE_HEADERS' do
+      expect(described_class::BASE_HEADERS).to eq({
+                                                    'Accept' => 'application/json',
+                                                    'Content-Type' => 'application/json'
+                                                  })
+    end
+  end
+
+  describe '#initialize' do
+    context 'with keyword arguments' do
+      it 'sets username and password' do
+        expect(client.username).to eq(username)
+        expect(client.password).to eq(password)
+        expect(client.accesstoken).to be_nil
+      end
+
+      it 'uses an existing accesstoken if provided' do
+        token = 'existing_token'
+        client = described_class.new(accesstoken: token)
+        expect(client.accesstoken).to eq(token)
+      end
+
+      it 'accepts custom timeout' do
+        client = described_class.new(username: username, password: password, timeout: 60)
+        expect(client.username).to eq(username)
+      end
+    end
+
+    context 'with hash argument (backwards compatibility)' do
+      it 'accepts hash with symbol keys' do
+        client = described_class.new({ username: username, password: password })
+        expect(client.username).to eq(username)
+        expect(client.password).to eq(password)
+      end
+    end
+
+    context 'with no arguments' do
+      it 'creates client with nil credentials' do
+        client = described_class.new
+        expect(client.username).to be_nil
+        expect(client.password).to be_nil
+        expect(client.accesstoken).to be_nil
+      end
     end
   end
 
@@ -28,6 +69,24 @@ RSpec.describe Sensorpush::Client do
     let(:token_url) { "#{api_base_url}/oauth/accesstoken" }
     let(:auth_code) { 'auth_code_123456' }
     let(:access_token) { 'access_token_987654321' }
+
+    context 'when credentials are missing' do
+      it 'raises AuthenticationError when username is nil' do
+        client = described_class.new(password: password)
+        expect { client.authenticate }.to raise_error(
+          Sensorpush::AuthenticationError,
+          'Username and password required'
+        )
+      end
+
+      it 'raises AuthenticationError when password is nil' do
+        client = described_class.new(username: username)
+        expect { client.authenticate }.to raise_error(
+          Sensorpush::AuthenticationError,
+          'Username and password required'
+        )
+      end
+    end
 
     context 'when authentication succeeds' do
       before do
@@ -161,7 +220,7 @@ RSpec.describe Sensorpush::Client do
       client.accesstoken = access_token
     end
 
-    context 'with minimal options' do
+    context 'with no options' do
       before do
         stub_request(:post, samples_url)
           .with(
@@ -188,7 +247,7 @@ RSpec.describe Sensorpush::Client do
       end
     end
 
-    context 'with all options' do
+    context 'with keyword arguments' do
       let(:limit) { 100 }
       let(:start_time) { Time.utc(2023, 4, 15, 12, 0, 0) }
       let(:end_time) { Time.utc(2023, 4, 15, 13, 0, 0) }
@@ -208,7 +267,7 @@ RSpec.describe Sensorpush::Client do
           .to_return(status: 200, body: fixture('samples_response.json'))
       end
 
-      it 'makes the correct API call with all options' do
+      it 'makes the correct API call with keyword arguments' do
         client.samples(sensor_id, limit: limit, start_time: start_time, end_time: end_time)
         expect(WebMock).to have_requested(:post, samples_url)
           .with(body: {
@@ -247,21 +306,22 @@ RSpec.describe Sensorpush::Client do
           .to_return(status: 200, body: 'not valid json')
       end
 
-      it 'raises a Sensorpush::Error' do
-        expect { client.samples('sensor_abc') }.to raise_error(Sensorpush::Error, /Failed to parse API response/)
+      it 'raises a Sensorpush::ParseError' do
+        expect { client.samples('sensor_abc') }.to raise_error(
+          Sensorpush::ParseError,
+          /Failed to parse API response/
+        )
       end
     end
 
-    context 'with HTTP error' do
+    context 'with HTTP error response' do
       before do
         stub_request(:post, samples_url)
           .to_return(status: 500, body: '{"status": 500, "message": "Internal server error"}')
       end
 
-      it 'does not raise an error' do
-        # Just make sure the method doesn't raise an uncaught exception
-        expect { client.samples('sensor_abc') }.not_to raise_error(SystemCallError)
-        # It should return an empty array when the response doesn't have the expected format
+      it 'does not raise an error for parseable error responses' do
+        expect { client.samples('sensor_abc') }.not_to raise_error
         expect(client.samples('sensor_abc')).to eq([])
       end
     end

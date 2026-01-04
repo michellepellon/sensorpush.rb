@@ -21,7 +21,7 @@
 # - PATCH: Incremented for backward-compatible bug fixes
 module Sensorpush
   # The current version of the Sensorpush gem
-  VERSION = '1.0.0'
+  VERSION = '2.0.0'
   # Version components for programmatic access
   MAJOR, MINOR, PATCH = VERSION.split('.')
 end

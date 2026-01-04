@@ -1,3 +1,32 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.5  # Use 3.5 until RuboCop supports 4.0
+  SuggestExtensions: false
+
 Metrics/BlockLength:
   Exclude:
     - '**/*.gemspec'
+    - 'spec/**/*'
+
+Metrics/MethodLength:
+  Max: 15
+
+Metrics/AbcSize:
+  Max: 30
+
+# Data class inheritance is the correct pattern for our Sample class
+Style/DataInheritance:
+  Enabled: false
+
+# We intentionally return nil in battery_low? when voltage is unknown
+Style/ReturnNilInPredicateMethodDefinition:
+  AllowedMethods:
+    - battery_low?
+
+# Development dependencies in gemspec is fine for this project
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+# RuboCop doesn't support Ruby 4.0 yet, so ignore this warning
+Gemspec/RequiredRubyVersion:
+  Enabled: false

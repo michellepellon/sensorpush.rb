@@ -39,6 +39,12 @@ RSpec.describe Sensorpush::Gateway do
     end
   end
 
+  describe 'immutability' do
+    it 'does not allow name modification' do
+      expect(gateway).not_to respond_to(:name=)
+    end
+  end
+
   describe 'datetime parsing' do
     context 'with valid datetime strings' do
       it 'parses last_seen correctly' do
@@ -74,6 +80,57 @@ RSpec.describe Sensorpush::Gateway do
         gateway = described_class.new(attributes.merge('last_alert' => nil))
         expect(gateway.last_alert).to be_nil
       end
+    end
+  end
+
+  describe '#instance_variables_to_inspect' do
+    it 'returns key instance variables for inspect output' do
+      expect(gateway.instance_variables_to_inspect).to eq(%i[@id @name @version @last_seen])
+    end
+  end
+
+  describe 'pattern matching' do
+    describe '#deconstruct_keys' do
+      it 'returns all attributes when keys is nil' do
+        result = gateway.deconstruct_keys(nil)
+        expect(result).to eq({
+                               id: 'gw_123',
+                               name: 'Living Room Gateway',
+                               version: '1.2.3',
+                               message: 'OK',
+                               last_seen: gateway.last_seen,
+                               last_alert: gateway.last_alert
+                             })
+      end
+
+      it 'returns only specified keys' do
+        result = gateway.deconstruct_keys(%i[id name])
+        expect(result).to eq({
+                               id: 'gw_123',
+                               name: 'Living Room Gateway'
+                             })
+      end
+    end
+
+    it 'supports case/in pattern matching' do
+      case gateway
+      in { id:, name:, version: }
+        expect(id).to eq('gw_123')
+        expect(name).to eq('Living Room Gateway')
+        expect(version).to eq('1.2.3')
+      else
+        raise 'Pattern should have matched'
+      end
+    end
+
+    it 'supports pattern matching with guard clauses' do
+      result = case gateway
+               in { last_seen: nil }
+                 'never online'
+               in { last_seen: }
+                 'has been online'
+               end
+      expect(result).to eq('has been online')
     end
   end
 end

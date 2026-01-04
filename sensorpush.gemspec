@@ -12,12 +12,14 @@ Gem::Specification.new do |spec|
                        'from applications written in the Ruby language.'
   spec.homepage      = 'https://github.com/michellepellon/sensorpush'
   spec.license       = 'ISC'
-  spec.required_ruby_version = '>= 3.4.1'
+  spec.required_ruby_version = '>= 4.0.0'
 
   spec.metadata = {
     'homepage_uri' => spec.homepage,
     'source_code_uri' => spec.homepage,
     'changelog_uri' => "#{spec.homepage}/blob/main/CHANGELOG.md",
+    'bug_tracker_uri' => "#{spec.homepage}/issues",
+    'documentation_uri' => 'https://rubydoc.info/gems/sensorpush',
     'rubygems_mfa_required' => 'true'
   }
 
