@@ -39,9 +39,21 @@ RSpec.describe Sensorpush::Gateway do
     end
   end
 
-  describe 'immutability' do
+  describe 'immutability (Data class)' do
+    it 'is a Data class' do
+      expect(described_class.ancestors).to include(Data)
+    end
+
     it 'does not allow name modification' do
       expect(gateway).not_to respond_to(:name=)
+    end
+
+    it 'produces frozen instances' do
+      expect(gateway).to be_frozen
+    end
+
+    it 'provides equality based on values' do
+      expect(described_class.new(attributes)).to eq(described_class.new(attributes))
     end
   end
 
@@ -80,12 +92,6 @@ RSpec.describe Sensorpush::Gateway do
         gateway = described_class.new(attributes.merge('last_alert' => nil))
         expect(gateway.last_alert).to be_nil
       end
-    end
-  end
-
-  describe '#instance_variables_to_inspect' do
-    it 'returns key instance variables for inspect output' do
-      expect(gateway.instance_variables_to_inspect).to eq(%i[@id @name @version @last_seen])
     end
   end
 
