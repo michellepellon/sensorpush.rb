@@ -39,7 +39,9 @@ client = Sensorpush.new(
   password: 'your-password'
 )
 
-# Authenticate with the SensorPush API
+# Authenticate with the SensorPush API.
+# Raises Sensorpush::AuthenticationError if credentials are missing or
+# rejected (HTTP 401/403), or Sensorpush::APIError for other failures.
 client.authenticate
 
 # Or use an existing access token
@@ -203,6 +205,7 @@ Version 2.0.0 requires Ruby 4.0.0 and includes several breaking changes:
 2. **Sample is now immutable** - `Sample` objects cannot be modified after creation
 3. **Gateway and Sensor names are read-only** - `name` is no longer writable
 4. **New error classes** - Errors are now more specific (`AuthenticationError`, `ParseError`, `APIError`)
+5. **`authenticate` raises on failure** - Non-2xx API responses now raise instead of being silently swallowed. `authenticate` raises `AuthenticationError` on rejected credentials (HTTP 401/403) rather than returning `false`; other request failures raise `APIError` with `#status` and `#api_message` populated.
 
 ### Migration Guide
 

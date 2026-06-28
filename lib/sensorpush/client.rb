@@ -4,6 +4,7 @@ require 'uri'
 require 'net/http'
 require 'json'
 require 'time'
+require 'openssl'
 
 module Sensorpush
   # Client for interacting with the SensorPush API
@@ -100,13 +101,15 @@ module Sensorpush
     # 2. Exchanges the code for an access token
     #
     # @return [Boolean] true if authentication was successful
-    # @raise [AuthenticationError] if username or password is missing
+    # @raise [AuthenticationError] if credentials are missing or rejected (HTTP 401/403)
+    # @raise [APIError] if the API request fails for any other reason
     #
     # @example
-    #   if client.authenticate
+    #   begin
+    #     client.authenticate
     #     puts "Authenticated successfully"
-    #   else
-    #     puts "Authentication failed"
+    #   rescue Sensorpush::AuthenticationError => e
+    #     puts "Authentication failed: #{e.message}"
     #   end
     def authenticate
       raise AuthenticationError, 'Username and password required' if username.nil? || password.nil?
@@ -114,6 +117,10 @@ module Sensorpush
       authorization = authorize
       @accesstoken = get_token(authorization) if authorization
       !@accesstoken.nil?
+    rescue APIError => e
+      raise AuthenticationError, "Authentication failed: #{e.api_message || e.message}" if [401, 403].include?(e.status)
+
+      raise
     end
 
     # Retrieve all gateways associated with the account
@@ -245,11 +252,29 @@ module Sensorpush
     # @param endpoint [String] API endpoint path
     # @param body [Hash] request body
     # @return [Hash] parsed JSON response
-    # @raise [ParseError] if response is not valid JSON
-    # @raise [APIError] if HTTP request fails
+    # @raise [ParseError] if a successful response is not valid JSON
+    # @raise [APIError] if the response status is not 2xx or the request fails
     def api_post(endpoint, body = {})
-      uri = URI(BASE_URL + endpoint)
+      response = perform_post(URI(BASE_URL + endpoint), body)
+      parsed = JSON.parse(response.body)
+      ensure_successful!(response, parsed)
+      parsed
+    rescue JSON::ParserError => e
+      raise ParseError, "Failed to parse API response: #{e.message}"
+    rescue Net::OpenTimeout, Net::ReadTimeout => e
+      raise APIError, "Request timed out: #{e.message}"
+    rescue OpenSSL::SSL::SSLError => e
+      raise APIError, "SSL error: #{e.message}"
+    rescue SystemCallError, SocketError => e
+      raise APIError, "HTTP request failed: #{e.message}"
+    end
 
+    # Build the HTTP client and execute the POST request
+    #
+    # @param uri [URI] the fully-qualified endpoint URI
+    # @param body [Hash] request body
+    # @return [Net::HTTPResponse] the raw HTTP response
+    def perform_post(uri, body)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.open_timeout = @timeout
@@ -257,15 +282,25 @@ module Sensorpush
 
       request = Net::HTTP::Post.new(uri.path, headers)
       request.body = body.to_json
+      http.request(request)
+    end
 
-      response = http.request(request)
-      JSON.parse(response.body)
-    rescue JSON::ParserError => e
-      raise ParseError, "Failed to parse API response: #{e.message}"
-    rescue Net::OpenTimeout, Net::ReadTimeout => e
-      raise APIError, "Request timed out: #{e.message}"
-    rescue SystemCallError, SocketError => e
-      raise APIError, "HTTP request failed: #{e.message}"
+    # Raise an APIError when the HTTP response status is not 2xx
+    #
+    # Surfaces the HTTP status code and the API-provided error message
+    # so callers can distinguish failures (e.g. 401 vs 500) instead of
+    # receiving a silently empty result.
+    #
+    # @param response [Net::HTTPResponse] the raw HTTP response
+    # @param parsed [Object] the parsed JSON body
+    # @return [void]
+    # @raise [APIError] if the status code is outside the 2xx range
+    def ensure_successful!(response, parsed)
+      status = response.code.to_i
+      return if (200..299).cover?(status)
+
+      api_message = parsed.is_a?(Hash) ? parsed['message'] : nil
+      raise APIError.new("API request failed (HTTP #{status})", status: status, api_message: api_message)
     end
   end
 end

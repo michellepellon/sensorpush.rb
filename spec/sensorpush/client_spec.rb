@@ -137,18 +137,21 @@ RSpec.describe Sensorpush::Client do
       end
     end
 
-    context 'when authorization fails' do
+    context 'when authorization fails with invalid credentials' do
       before do
         stub_request(:post, authorize_url)
           .to_return(status: 401, body: { status: 401, message: 'Invalid credentials' }.to_json)
       end
 
-      it 'returns false' do
-        expect(client.authenticate).to be false
+      it 'raises an AuthenticationError carrying the API message' do
+        expect { client.authenticate }.to raise_error(
+          Sensorpush::AuthenticationError,
+          /Invalid credentials/
+        )
       end
 
       it 'does not set the accesstoken' do
-        client.authenticate
+        expect { client.authenticate }.to raise_error(Sensorpush::AuthenticationError)
         expect(client.accesstoken).to be_nil
       end
     end
@@ -162,12 +165,15 @@ RSpec.describe Sensorpush::Client do
           .to_return(status: 400, body: { status: 400, message: 'Invalid authorization code' }.to_json)
       end
 
-      it 'returns false' do
-        expect(client.authenticate).to be false
+      it 'raises an APIError exposing the status code' do
+        expect { client.authenticate }.to raise_error(Sensorpush::APIError) do |error|
+          expect(error.status).to eq(400)
+          expect(error.api_message).to eq('Invalid authorization code')
+        end
       end
 
       it 'does not set the accesstoken' do
-        client.authenticate
+        expect { client.authenticate }.to raise_error(Sensorpush::APIError)
         expect(client.accesstoken).to be_nil
       end
     end
@@ -336,9 +342,37 @@ RSpec.describe Sensorpush::Client do
           .to_return(status: 500, body: '{"status": 500, "message": "Internal server error"}')
       end
 
-      it 'does not raise an error for parseable error responses' do
-        expect { client.samples('sensor_abc') }.not_to raise_error
-        expect(client.samples('sensor_abc')).to eq([])
+      it 'raises an APIError carrying the status and API message' do
+        expect { client.samples('sensor_abc') }.to raise_error(Sensorpush::APIError) do |error|
+          expect(error.status).to eq(500)
+          expect(error.api_message).to eq('Internal server error')
+        end
+      end
+    end
+
+    context 'with a TLS failure' do
+      before do
+        stub_request(:post, samples_url).to_raise(OpenSSL::SSL::SSLError.new('certificate verify failed'))
+      end
+
+      it 'wraps it in a Sensorpush::APIError' do
+        expect { client.samples('sensor_abc') }.to raise_error(
+          Sensorpush::APIError,
+          /SSL error/
+        )
+      end
+    end
+
+    context 'with a request timeout' do
+      before do
+        stub_request(:post, samples_url).to_timeout
+      end
+
+      it 'wraps it in a Sensorpush::APIError' do
+        expect { client.samples('sensor_abc') }.to raise_error(
+          Sensorpush::APIError,
+          /timed out/
+        )
       end
     end
   end
