@@ -3,6 +3,7 @@
 require 'uri'
 require 'net/http'
 require 'json'
+require 'time'
 
 module Sensorpush
   # Client for interacting with the SensorPush API
@@ -175,8 +176,8 @@ module Sensorpush
     def samples(id, limit: nil, start_time: nil, end_time: nil)
       body = { sensors: [id] }
       body[:limit] = limit if limit
-      body[:startTime] = start_time.to_s if start_time
-      body[:endTime] = end_time.to_s if end_time
+      body[:startTime] = format_time(start_time) if start_time
+      body[:endTime] = format_time(end_time) if end_time
 
       response = api_post('/samples', body)
 
@@ -184,6 +185,18 @@ module Sensorpush
     end
 
     private
+
+    # Format a time value as an ISO 8601 string for the API
+    #
+    # The SensorPush API expects ISO 8601 / RFC 3339 timestamps
+    # (e.g. "2024-01-01T00:00:00Z"). Time and DateTime are converted via
+    # #iso8601; strings (assumed already formatted) are passed through.
+    #
+    # @param value [Time, DateTime, String] the time value to format
+    # @return [String] ISO 8601 timestamp
+    def format_time(value)
+      value.respond_to?(:iso8601) ? value.iso8601 : value.to_s
+    end
 
     # Parse API response for device endpoints
     #
