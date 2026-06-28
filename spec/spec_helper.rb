@@ -24,7 +24,3 @@ end
 def fixture(file)
   File.read(File.join(fixture_path, file))
 end
-
-def json_fixture(file)
-  JSON.parse(fixture(file))
-end
