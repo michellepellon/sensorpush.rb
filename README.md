@@ -195,18 +195,25 @@ rescue Sensorpush::Error => e
 end
 ```
 
-## Upgrading from 1.x
+## Upgrading
 
-Version 2.0.0 requires Ruby 4.0.0 and includes several breaking changes:
+See the [CHANGELOG](CHANGELOG.md) for the full, version-by-version list of
+changes. The most significant breaking changes are summarized below; the
+3.x notes in particular cover the new error-raising behavior and the switch
+from `DateTime` to `Time`.
 
-### Breaking Changes
+### Breaking changes in 2.x
 
 1. **Ruby 4.0.0 required** - The gem now requires Ruby 4.0.0 or higher
 2. **Sample is now immutable** - `Sample` objects cannot be modified after creation
 3. **Gateway and Sensor names are read-only** - `name` is no longer writable
 4. **New error classes** - Errors are now more specific (`AuthenticationError`, `ParseError`, `APIError`)
-5. **`authenticate` raises on failure** - Non-2xx API responses now raise instead of being silently swallowed. `authenticate` raises `AuthenticationError` on rejected credentials (HTTP 401/403) rather than returning `false`; other request failures raise `APIError` with `#status` and `#api_message` populated.
-6. **Timestamps are now `Time`** - Parsed timestamps (`Sample#observed`, `Gateway#last_seen`, `Gateway#last_alert`) return `Time` instead of the legacy `DateTime`. Note that time arithmetic differs: `Time - 1` subtracts one *second*, whereas `DateTime - 1` subtracted one *day* (use `Time.now - 86_400` for "24 hours ago").
+
+### Breaking changes in 3.x
+
+1. **`authenticate` raises on failure** - Non-2xx API responses now raise instead of being silently swallowed. `authenticate` raises `AuthenticationError` on rejected credentials (HTTP 401/403) rather than returning `false`; other request failures raise `APIError` with `#status` and `#api_message` populated.
+2. **Timestamps are now `Time`** - Parsed timestamps (`Sample#observed`, `Gateway#last_seen`, `Gateway#last_alert`) return `Time` instead of the legacy `DateTime`. Note that time arithmetic differs: `Time - 1` subtracts one *second*, whereas `DateTime - 1` subtracted one *day* (use `Time.now - 86_400` for "24 hours ago").
+3. **`Sensor` and `Gateway` are `Data` classes** - They gain value-based equality and frozen instances; `inspect` now uses the `Data` format and shows all attributes.
 
 ### Migration Guide
 
