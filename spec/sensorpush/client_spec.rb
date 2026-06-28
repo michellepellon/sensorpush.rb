@@ -258,8 +258,8 @@ RSpec.describe Sensorpush::Client do
             body: {
               sensors: [sensor_id],
               limit: limit,
-              startTime: start_time.to_s,
-              endTime: end_time.to_s
+              startTime: start_time.iso8601,
+              endTime: end_time.iso8601
             }.to_json,
             headers: { 'Authorization' => access_token, 'Content-Type' => 'application/json',
                        'Accept' => 'application/json' }
@@ -273,8 +273,8 @@ RSpec.describe Sensorpush::Client do
           .with(body: {
             sensors: [sensor_id],
             limit: limit,
-            startTime: start_time.to_s,
-            endTime: end_time.to_s
+            startTime: start_time.iso8601,
+            endTime: end_time.iso8601
           }.to_json)
       end
     end
