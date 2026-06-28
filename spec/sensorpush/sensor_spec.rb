@@ -99,6 +99,13 @@ RSpec.describe Sensorpush::Sensor do
         sensor = described_class.new(attributes.merge('battery_voltage' => 1.5))
         expect(sensor.battery_percentage).to eq(0)
       end
+
+      it 'always returns a Float, including at the clamp boundaries' do
+        [3.0, 2.85, 2.5, 3.5, 1.5].each do |voltage|
+          sensor = described_class.new(attributes.merge('battery_voltage' => voltage))
+          expect(sensor.battery_percentage).to be_a(Float)
+        end
+      end
     end
 
     context 'when battery voltage is nil' do
