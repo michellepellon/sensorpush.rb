@@ -7,10 +7,10 @@
 # == Usage Examples
 #
 #   # Access the complete version string
-#   Sensorpush::VERSION  #=> "2.0.0"
+#   Sensorpush::VERSION  #=> "3.0.0"
 #
 #   # Access individual version components
-#   Sensorpush::MAJOR    #=> "2"
+#   Sensorpush::MAJOR    #=> "3"
 #   Sensorpush::MINOR    #=> "0"
 #   Sensorpush::PATCH    #=> "0"
 #
@@ -21,7 +21,7 @@
 # - PATCH: Incremented for backward-compatible bug fixes
 module Sensorpush
   # The current version of the Sensorpush gem
-  VERSION = '2.0.0'
+  VERSION = '3.0.0'
   # Version components for programmatic access
   MAJOR, MINOR, PATCH = VERSION.split('.')
 end
