@@ -107,7 +107,7 @@ module Sensorpush
 
       voltage_range = BATTERY_MAX_VOLTAGE - BATTERY_MIN_VOLTAGE
       percentage = ((battery_voltage - BATTERY_MIN_VOLTAGE) / voltage_range) * 100
-      percentage.clamp(0, 100)
+      percentage.clamp(0.0, 100.0)
     end
 
     # Control which instance variables appear in #inspect output
