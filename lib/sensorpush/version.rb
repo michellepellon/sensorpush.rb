@@ -7,10 +7,10 @@
 # == Usage Examples
 #
 #   # Access the complete version string
-#   Sensorpush::VERSION  #=> "1.0.0"
+#   Sensorpush::VERSION  #=> "2.0.0"
 #
 #   # Access individual version components
-#   Sensorpush::MAJOR    #=> "1"
+#   Sensorpush::MAJOR    #=> "2"
 #   Sensorpush::MINOR    #=> "0"
 #   Sensorpush::PATCH    #=> "0"
 #
