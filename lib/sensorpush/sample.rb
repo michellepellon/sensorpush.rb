@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'date'
+require 'time'
 require_relative 'parseable'
 
 module Sensorpush
@@ -51,7 +51,7 @@ module Sensorpush
         new(
           humidity: attributes['humidity'],
           temperature: attributes['temperature'],
-          observed: parse_datetime(attributes['observed'])
+          observed: parse_time(attributes['observed'])
         )
       end
 
@@ -67,14 +67,14 @@ module Sensorpush
       # @overload new(humidity:, temperature:, observed:)
       #   @param humidity [Float, nil] relative humidity percentage
       #   @param temperature [Float, nil] temperature reading
-      #   @param observed [DateTime, nil] when sample was taken
+      #   @param observed [Time, nil] when sample was taken
       #   @return [Sample] new Sample instance
       #
       # @example Hash initialization (backwards compatible)
       #   Sample.new({ 'temperature' => 21.5, 'humidity' => 45.2 })
       #
       # @example Keyword initialization (Data class style)
-      #   Sample.new(temperature: 21.5, humidity: 45.2, observed: DateTime.now)
+      #   Sample.new(temperature: 21.5, humidity: 45.2, observed: Time.now)
       def new(*args, **kwargs)
         # Check if called with a single Hash positional argument (API style)
         if args.size == 1 && args.first.is_a?(Hash) && kwargs.empty?

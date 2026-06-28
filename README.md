@@ -137,7 +137,7 @@ gateways.each do |gateway|
   case gateway
   in { last_seen: nil }
     puts "#{gateway.name} has never been online"
-  in { last_seen: seen } if seen < DateTime.now - 1
+  in { last_seen: seen } if seen < Time.now - 86_400
     puts "#{gateway.name} offline for more than 24 hours"
   end
 end
@@ -206,6 +206,7 @@ Version 2.0.0 requires Ruby 4.0.0 and includes several breaking changes:
 3. **Gateway and Sensor names are read-only** - `name` is no longer writable
 4. **New error classes** - Errors are now more specific (`AuthenticationError`, `ParseError`, `APIError`)
 5. **`authenticate` raises on failure** - Non-2xx API responses now raise instead of being silently swallowed. `authenticate` raises `AuthenticationError` on rejected credentials (HTTP 401/403) rather than returning `false`; other request failures raise `APIError` with `#status` and `#api_message` populated.
+6. **Timestamps are now `Time`** - Parsed timestamps (`Sample#observed`, `Gateway#last_seen`, `Gateway#last_alert`) return `Time` instead of the legacy `DateTime`. Note that time arithmetic differs: `Time - 1` subtracts one *second*, whereas `DateTime - 1` subtracted one *day* (use `Time.now - 86_400` for "24 hours ago").
 
 ### Migration Guide
 

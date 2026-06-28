@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'date'
+require 'time'
 require_relative 'parseable'
 
 module Sensorpush
@@ -22,7 +22,7 @@ module Sensorpush
   #   case gateway
   #   in { last_seen: nil }
   #     puts "Gateway has never been online"
-  #   in { last_seen: seen } if seen < DateTime.now - 1
+  #   in { last_seen: seen } if seen < Time.now - 86_400
   #     puts "Gateway offline for more than 24 hours"
   #   end
   class Gateway
@@ -40,10 +40,10 @@ module Sensorpush
     # @return [String] latest status message from the gateway
     attr_reader :message
 
-    # @return [DateTime, nil] when the gateway was last seen online
+    # @return [Time, nil] when the gateway was last seen online
     attr_reader :last_seen
 
-    # @return [DateTime, nil] when the gateway last triggered an alert
+    # @return [Time, nil] when the gateway last triggered an alert
     attr_reader :last_alert
 
     # Initialize a new Gateway instance
@@ -60,8 +60,8 @@ module Sensorpush
       @name = attributes['name']
       @version = attributes['version']
       @message = attributes['message']
-      @last_seen = parse_datetime(attributes['last_seen'])
-      @last_alert = parse_datetime(attributes['last_alert'])
+      @last_seen = parse_time(attributes['last_seen'])
+      @last_alert = parse_time(attributes['last_alert'])
     end
 
     # Control which instance variables appear in #inspect output
@@ -91,7 +91,7 @@ module Sensorpush
     #
     # @example Selective deconstruction
     #   gateway.deconstruct_keys([:name, :last_seen])
-    #   #=> { name: "Living Room", last_seen: #<DateTime...> }
+    #   #=> { name: "Living Room", last_seen: 2024-01-15 12:30:45 UTC }
     def deconstruct_keys(keys)
       hash = {
         id: @id,

@@ -15,8 +15,8 @@ RSpec.describe Sensorpush::Sample do
 
   describe '#initialize' do
     it 'sets attributes correctly' do
-      expect(sample.observed).to be_a(DateTime)
-      expect(sample.observed.to_s).to eq('2023-04-15T12:00:00+00:00')
+      expect(sample.observed).to be_a(Time)
+      expect(sample.observed.iso8601).to eq('2023-04-15T12:00:00Z')
       expect(sample.temperature).to eq(21.5)
       expect(sample.humidity).to eq(45.2)
     end
@@ -33,11 +33,11 @@ RSpec.describe Sensorpush::Sample do
         sample = described_class.new(
           humidity: 50.0,
           temperature: 22.0,
-          observed: DateTime.now
+          observed: Time.now
         )
         expect(sample.humidity).to eq(50.0)
         expect(sample.temperature).to eq(22.0)
-        expect(sample.observed).to be_a(DateTime)
+        expect(sample.observed).to be_a(Time)
       end
     end
   end
@@ -47,15 +47,15 @@ RSpec.describe Sensorpush::Sample do
       sample = described_class.from_api(attributes)
       expect(sample.temperature).to eq(21.5)
       expect(sample.humidity).to eq(45.2)
-      expect(sample.observed).to be_a(DateTime)
+      expect(sample.observed).to be_a(Time)
     end
   end
 
   describe 'datetime parsing' do
     context 'with valid datetime string' do
       it 'parses correctly' do
-        expect(sample.observed).to be_a(DateTime)
-        expect(sample.observed.to_s).to eq('2023-04-15T12:00:00+00:00')
+        expect(sample.observed).to be_a(Time)
+        expect(sample.observed.iso8601).to eq('2023-04-15T12:00:00Z')
       end
     end
 
@@ -106,7 +106,7 @@ RSpec.describe Sensorpush::Sample do
       humidity, temperature, observed = sample.deconstruct
       expect(humidity).to eq(45.2)
       expect(temperature).to eq(21.5)
-      expect(observed).to be_a(DateTime)
+      expect(observed).to be_a(Time)
     end
 
     it 'supports guard clauses in pattern matching' do

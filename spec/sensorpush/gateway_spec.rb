@@ -22,10 +22,10 @@ RSpec.describe Sensorpush::Gateway do
       expect(gateway.name).to eq('Living Room Gateway')
       expect(gateway.version).to eq('1.2.3')
       expect(gateway.message).to eq('OK')
-      expect(gateway.last_seen).to be_a(DateTime)
-      expect(gateway.last_seen.to_s).to eq('2023-04-15T12:30:45+00:00')
-      expect(gateway.last_alert).to be_a(DateTime)
-      expect(gateway.last_alert.to_s).to eq('2023-04-10T08:15:20+00:00')
+      expect(gateway.last_seen).to be_a(Time)
+      expect(gateway.last_seen.iso8601).to eq('2023-04-15T12:30:45Z')
+      expect(gateway.last_alert).to be_a(Time)
+      expect(gateway.last_alert.iso8601).to eq('2023-04-10T08:15:20Z')
     end
 
     it 'handles missing attributes' do
@@ -48,13 +48,13 @@ RSpec.describe Sensorpush::Gateway do
   describe 'datetime parsing' do
     context 'with valid datetime strings' do
       it 'parses last_seen correctly' do
-        expect(gateway.last_seen).to be_a(DateTime)
-        expect(gateway.last_seen.to_s).to eq('2023-04-15T12:30:45+00:00')
+        expect(gateway.last_seen).to be_a(Time)
+        expect(gateway.last_seen.iso8601).to eq('2023-04-15T12:30:45Z')
       end
 
       it 'parses last_alert correctly' do
-        expect(gateway.last_alert).to be_a(DateTime)
-        expect(gateway.last_alert.to_s).to eq('2023-04-10T08:15:20+00:00')
+        expect(gateway.last_alert).to be_a(Time)
+        expect(gateway.last_alert.iso8601).to eq('2023-04-10T08:15:20Z')
       end
     end
 
