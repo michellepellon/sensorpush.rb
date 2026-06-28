@@ -79,14 +79,10 @@ module Sensorpush
         # Check if called with a single Hash positional argument (API style)
         if args.size == 1 && args.first.is_a?(Hash) && kwargs.empty?
           hash = args.first
-          # String keys indicate API response format
-          if hash.empty? || hash.keys.any? { |k| k.is_a?(String) }
-            return super(
-              humidity: hash['humidity'],
-              temperature: hash['temperature'],
-              observed: parse_datetime(hash['observed'])
-            )
-          end
+          # String keys (or an empty hash) indicate API response format;
+          # delegate to from_api so conversion lives in one place.
+          return from_api(hash) if hash.empty? || hash.keys.any? { |k| k.is_a?(String) }
+
           # Symbol keys - use as kwargs
           return super(**hash)
         end
