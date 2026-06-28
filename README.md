@@ -237,7 +237,7 @@ bundle exec rake
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/michellepellon/sensorpush.
+Bug reports and pull requests are welcome on GitHub at https://github.com/michellepellon/sensorpush.rb.
 
 ## License
 

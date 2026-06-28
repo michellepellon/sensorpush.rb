@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.summary       = 'Ruby library for the SensorPush API.'
   spec.description   = 'The SensorPush Ruby library provides convenient access to the SensorPush API ' \
                        'from applications written in the Ruby language.'
-  spec.homepage      = 'https://github.com/michellepellon/sensorpush'
+  spec.homepage      = 'https://github.com/michellepellon/sensorpush.rb'
   spec.license       = 'ISC'
   spec.required_ruby_version = '>= 4.0.0'
 
