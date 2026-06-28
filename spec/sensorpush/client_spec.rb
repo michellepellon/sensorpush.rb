@@ -64,6 +64,22 @@ RSpec.describe Sensorpush::Client do
     end
   end
 
+  describe '#inspect' do
+    subject(:client) do
+      described_class.new(username: username, password: password, accesstoken: 'secret-token-abc')
+    end
+
+    it 'does not disclose the password or access token' do
+      output = client.inspect
+      expect(output).not_to include(password)
+      expect(output).not_to include('secret-token-abc')
+    end
+
+    it 'still shows non-sensitive attributes' do
+      expect(client.inspect).to include(username)
+    end
+  end
+
   describe '#authenticate' do
     let(:authorize_url) { "#{api_base_url}/oauth/authorize" }
     let(:token_url) { "#{api_base_url}/oauth/accesstoken" }

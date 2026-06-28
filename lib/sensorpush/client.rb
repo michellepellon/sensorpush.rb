@@ -80,6 +80,18 @@ module Sensorpush
       super()
     end
 
+    # Control which instance variables appear in #inspect output
+    #
+    # Redacts sensitive credentials so the password and access token are
+    # never disclosed through inspect output (logs, exception reporters,
+    # REPL history). Only non-sensitive attributes are exposed.
+    #
+    # @return [Array<Symbol>] instance variables to include in inspect
+    # @api private
+    def instance_variables_to_inspect
+      %i[@username @timeout]
+    end
+
     # Authenticate with the SensorPush API
     #
     # Performs the OAuth2 authorization flow:
