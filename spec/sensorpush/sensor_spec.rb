@@ -45,9 +45,21 @@ RSpec.describe Sensorpush::Sensor do
     end
   end
 
-  describe 'immutability' do
+  describe 'immutability (Data class)' do
+    it 'is a Data class' do
+      expect(described_class.ancestors).to include(Data)
+    end
+
     it 'does not allow name modification' do
       expect(sensor).not_to respond_to(:name=)
+    end
+
+    it 'produces frozen instances' do
+      expect(sensor).to be_frozen
+    end
+
+    it 'provides equality based on values' do
+      expect(described_class.new(attributes)).to eq(described_class.new(attributes))
     end
   end
 
@@ -113,12 +125,6 @@ RSpec.describe Sensorpush::Sensor do
         sensor = described_class.new(attributes.merge('battery_voltage' => nil))
         expect(sensor.battery_percentage).to be_nil
       end
-    end
-  end
-
-  describe '#instance_variables_to_inspect' do
-    it 'returns key instance variables for inspect output' do
-      expect(sensor.instance_variables_to_inspect).to eq(%i[@id @name @active @battery_voltage])
     end
   end
 

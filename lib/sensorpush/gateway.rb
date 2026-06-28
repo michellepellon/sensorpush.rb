@@ -1,14 +1,19 @@
 # frozen_string_literal: true
 
-require 'time'
 require_relative 'parseable'
 
 module Sensorpush
+  # Base class created by Data.define
+  GatewayData = Data.define(:id, :name, :version, :message, :last_seen, :last_alert)
+
   # Represents a SensorPush gateway device
   #
   # Gateways are the bridge between your SensorPush sensors and the cloud.
   # They receive data from nearby sensors via Bluetooth and upload it to
   # the SensorPush cloud service.
+  #
+  # Gateway is an immutable value object built on Ruby's Data class, providing
+  # value-based equality and frozen instances.
   #
   # @note All attributes are read-only. Gateway objects represent a snapshot
   #   of the device state from the API.
@@ -25,83 +30,57 @@ module Sensorpush
   #   in { last_seen: seen } if seen < Time.now - 86_400
   #     puts "Gateway offline for more than 24 hours"
   #   end
-  class Gateway
-    include Parseable
+  class Gateway < GatewayData
+    extend Parseable
 
-    # @return [String] unique identifier for the gateway
-    attr_reader :id
+    class << self
+      # Create a Gateway from API response attributes
+      #
+      # Handles the string-keyed hash format returned by the SensorPush API
+      # and parses timestamp fields into Time objects.
+      #
+      # @param attributes [Hash] gateway attributes from the API
+      # @option attributes [String] "id" unique identifier
+      # @option attributes [String] "name" user-defined name
+      # @option attributes [String] "version" firmware version
+      # @option attributes [String] "message" status message
+      # @option attributes [String] "last_seen" ISO8601 timestamp
+      # @option attributes [String] "last_alert" ISO8601 timestamp
+      # @return [Gateway] new immutable Gateway instance
+      def from_api(attributes)
+        new(
+          id: attributes['id'],
+          name: attributes['name'],
+          version: attributes['version'],
+          message: attributes['message'],
+          last_seen: parse_time(attributes['last_seen']),
+          last_alert: parse_time(attributes['last_alert'])
+        )
+      end
 
-    # @return [String] user-defined name of the gateway
-    attr_reader :name
+      # Override new to support backwards-compatible Hash initialization
+      #
+      # Allows the existing `Gateway.new(hash_with_string_keys)` interface to
+      # continue working while also supporting the Data class keyword syntax.
+      #
+      # @overload new(attributes)
+      #   @param attributes [Hash<String, Object>] API-style hash with string keys
+      #   @return [Gateway] new Gateway instance
+      #
+      # @overload new(id:, name:, version:, message:, last_seen:, last_alert:)
+      #   @return [Gateway] new Gateway instance
+      def new(*args, **kwargs)
+        if args.size == 1 && args.first.is_a?(Hash) && kwargs.empty?
+          hash = args.first
+          # String keys (or an empty hash) indicate API response format
+          return from_api(hash) if hash.empty? || hash.keys.any? { |k| k.is_a?(String) }
 
-    # @return [String] firmware version of the gateway
-    attr_reader :version
+          # Symbol keys - use as kwargs
+          return super(**hash)
+        end
 
-    # @return [String] latest status message from the gateway
-    attr_reader :message
-
-    # @return [Time, nil] when the gateway was last seen online
-    attr_reader :last_seen
-
-    # @return [Time, nil] when the gateway last triggered an alert
-    attr_reader :last_alert
-
-    # Initialize a new Gateway instance
-    #
-    # @param attributes [Hash] gateway attributes from the API
-    # @option attributes [String] "id" unique identifier
-    # @option attributes [String] "name" user-defined name
-    # @option attributes [String] "version" firmware version
-    # @option attributes [String] "message" status message
-    # @option attributes [String] "last_seen" ISO8601 timestamp
-    # @option attributes [String] "last_alert" ISO8601 timestamp
-    def initialize(attributes = {})
-      @id = attributes['id']
-      @name = attributes['name']
-      @version = attributes['version']
-      @message = attributes['message']
-      @last_seen = parse_time(attributes['last_seen'])
-      @last_alert = parse_time(attributes['last_alert'])
-    end
-
-    # Control which instance variables appear in #inspect output
-    #
-    # This Ruby 4.0 feature provides cleaner inspect output by excluding
-    # less important attributes like message and last_alert.
-    #
-    # @return [Array<Symbol>] instance variables to include in inspect
-    # @api private
-    def instance_variables_to_inspect
-      %i[@id @name @version @last_seen]
-    end
-
-    # Support pattern matching deconstruction
-    #
-    # Enables the use of pattern matching with Gateway objects using
-    # the `case/in` syntax.
-    #
-    # @param keys [Array<Symbol>, nil] specific keys to include, or nil for all
-    # @return [Hash] deconstructed attributes
-    #
-    # @example Full deconstruction
-    #   case gateway
-    #   in { id:, name:, version: }
-    #     puts "Gateway #{name} (#{id}) running v#{version}"
-    #   end
-    #
-    # @example Selective deconstruction
-    #   gateway.deconstruct_keys([:name, :last_seen])
-    #   #=> { name: "Living Room", last_seen: 2024-01-15 12:30:45 UTC }
-    def deconstruct_keys(keys)
-      hash = {
-        id: @id,
-        name: @name,
-        version: @version,
-        message: @message,
-        last_seen: @last_seen,
-        last_alert: @last_alert
-      }
-      keys ? hash.slice(*keys) : hash
+        super
+      end
     end
   end
 end

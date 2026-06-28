@@ -1,10 +1,16 @@
 # frozen_string_literal: true
 
 module Sensorpush
+  # Base class created by Data.define
+  SensorData = Data.define(:id, :name, :active, :address, :battery_voltage, :device_id)
+
   # Represents a SensorPush sensor device
   #
   # Sensors are the environmental monitoring devices that measure temperature
   # and humidity. They communicate with nearby gateways via Bluetooth.
+  #
+  # Sensor is an immutable value object built on Ruby's Data class, providing
+  # value-based equality and frozen instances.
   #
   # @note All attributes are read-only. Sensor objects represent a snapshot
   #   of the device state from the API.
@@ -22,7 +28,7 @@ module Sensorpush
   #   in { active: false, name: }
   #     puts "Sensor #{name} is inactive"
   #   end
-  class Sensor
+  class Sensor < SensorData
     # Battery voltage below which the sensor is considered low
     # @return [Float]
     BATTERY_LOW_THRESHOLD = 2.2
@@ -35,40 +41,54 @@ module Sensorpush
     # @return [Float]
     BATTERY_MIN_VOLTAGE = 2.0
 
-    # @return [Boolean, nil] whether the sensor is currently active
-    attr_reader :active
+    class << self
+      # Create a Sensor from API response attributes
+      #
+      # Handles the string-keyed hash format returned by the SensorPush API,
+      # mapping the API's "deviceId" key to the device_id member.
+      #
+      # @param attributes [Hash] sensor attributes from the API
+      # @option attributes [String] "id" unique API identifier
+      # @option attributes [String] "name" user-defined sensor name
+      # @option attributes [Boolean] "active" sensor activity status
+      # @option attributes [String] "address" Bluetooth MAC address
+      # @option attributes [Float] "battery_voltage" current battery level in volts
+      # @option attributes [String] "deviceId" hardware identifier
+      # @return [Sensor] new immutable Sensor instance
+      def from_api(attributes)
+        new(
+          id: attributes['id'],
+          name: attributes['name'],
+          active: attributes['active'],
+          address: attributes['address'],
+          battery_voltage: attributes['battery_voltage'],
+          device_id: attributes['deviceId']
+        )
+      end
 
-    # @return [String, nil] user-defined name of the sensor
-    attr_reader :name
+      # Override new to support backwards-compatible Hash initialization
+      #
+      # Allows the existing `Sensor.new(hash_with_string_keys)` interface to
+      # continue working while also supporting the Data class keyword syntax.
+      #
+      # @overload new(attributes)
+      #   @param attributes [Hash<String, Object>] API-style hash with string keys
+      #   @return [Sensor] new Sensor instance
+      #
+      # @overload new(id:, name:, active:, address:, battery_voltage:, device_id:)
+      #   @return [Sensor] new Sensor instance
+      def new(*args, **kwargs)
+        if args.size == 1 && args.first.is_a?(Hash) && kwargs.empty?
+          hash = args.first
+          # String keys (or an empty hash) indicate API response format
+          return from_api(hash) if hash.empty? || hash.keys.any? { |k| k.is_a?(String) }
 
-    # @return [String, nil] Bluetooth MAC address of the sensor
-    attr_reader :address
+          # Symbol keys - use as kwargs
+          return super(**hash)
+        end
 
-    # @return [Float, nil] current battery voltage
-    attr_reader :battery_voltage
-
-    # @return [String, nil] unique identifier in the SensorPush API
-    attr_reader :id
-
-    # @return [String, nil] hardware identifier of the sensor
-    attr_reader :device_id
-
-    # Initialize a new Sensor instance
-    #
-    # @param attributes [Hash] sensor attributes from the API
-    # @option attributes [Boolean] "active" sensor activity status
-    # @option attributes [String] "name" user-defined sensor name
-    # @option attributes [String] "address" Bluetooth MAC address
-    # @option attributes [Float] "battery_voltage" current battery level in volts
-    # @option attributes [String] "id" unique API identifier
-    # @option attributes [String] "deviceId" hardware identifier
-    def initialize(attributes = {})
-      @active = attributes['active']
-      @name = attributes['name']
-      @address = attributes['address']
-      @battery_voltage = attributes['battery_voltage']
-      @id = attributes['id']
-      @device_id = attributes['deviceId']
+        super
+      end
     end
 
     # Determines if the sensor's battery is low
@@ -110,21 +130,10 @@ module Sensorpush
       percentage.clamp(0.0, 100.0)
     end
 
-    # Control which instance variables appear in #inspect output
-    #
-    # This Ruby 4.0 feature provides cleaner inspect output by showing
-    # only the most relevant attributes.
-    #
-    # @return [Array<Symbol>] instance variables to include in inspect
-    # @api private
-    def instance_variables_to_inspect
-      %i[@id @name @active @battery_voltage]
-    end
-
     # Support pattern matching deconstruction
     #
-    # Enables the use of pattern matching with Sensor objects using
-    # the `case/in` syntax. Includes computed properties for convenience.
+    # Extends the Data-provided deconstruction with computed properties
+    # (battery_low, battery_percentage) for convenience in pattern matching.
     #
     # @param keys [Array<Symbol>, nil] specific keys to include, or nil for all
     # @return [Hash] deconstructed attributes including computed values
@@ -139,17 +148,8 @@ module Sensorpush
     #   sensor.deconstruct_keys([:name, :battery_percentage])
     #   #=> { name: "Living Room", battery_percentage: 85.0 }
     def deconstruct_keys(keys)
-      hash = {
-        id: @id,
-        name: @name,
-        active: @active,
-        address: @address,
-        battery_voltage: @battery_voltage,
-        device_id: @device_id,
-        battery_low: battery_low?,
-        battery_percentage: battery_percentage
-      }
-      keys ? hash.slice(*keys) : hash
+      full = super(nil).merge(battery_low: battery_low?, battery_percentage: battery_percentage)
+      keys ? full.slice(*keys) : full
     end
   end
 end
