@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'date'
+require 'time'
 
 module Sensorpush
   # Provides parsing utilities for model classes
@@ -13,25 +13,25 @@ module Sensorpush
   #     include Parseable
   #
   #     def initialize(attributes)
-  #       @last_seen = parse_datetime(attributes['last_seen'])
+  #       @last_seen = parse_time(attributes['last_seen'])
   #     end
   #   end
   module Parseable
-    # Safely parse a datetime string from API response
+    # Safely parse a timestamp string from an API response
     #
-    # @param datetime_string [String, nil] ISO8601 datetime string from the API
-    # @return [DateTime, nil] parsed DateTime object or nil if parsing fails
+    # @param time_string [String, nil] ISO8601 timestamp string from the API
+    # @return [Time, nil] parsed Time object or nil if parsing fails
     #
-    # @example Parsing a valid datetime
-    #   parse_datetime("2024-01-15T12:30:00Z") #=> #<DateTime: 2024-01-15T12:30:00+00:00>
+    # @example Parsing a valid timestamp
+    #   parse_time("2024-01-15T12:30:00Z") #=> 2024-01-15 12:30:00 UTC
     #
     # @example Handling nil input
-    #   parse_datetime(nil) #=> nil
+    #   parse_time(nil) #=> nil
     #
     # @example Handling invalid input
-    #   parse_datetime("not a date") #=> nil
-    def parse_datetime(datetime_string)
-      DateTime.parse(datetime_string) if datetime_string
+    #   parse_time("not a date") #=> nil
+    def parse_time(time_string)
+      Time.parse(time_string) if time_string
     rescue ArgumentError
       nil
     end
