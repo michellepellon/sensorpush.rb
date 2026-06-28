@@ -12,3 +12,5 @@
 
 # IDE related
 .idea/
+# Local environment / secrets
+.env
