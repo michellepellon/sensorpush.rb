@@ -163,7 +163,8 @@ module Sensorpush
     # @param id [String] sensor ID
     # @param limit [Integer, nil] maximum number of samples to return
     # @param start_time [Time, nil] earliest time for samples
-    # @param end_time [Time, nil] latest time for samples
+    # @param end_time [Time, nil] latest time for samples (sent to the API
+    #   as its +stopTime+ parameter)
     # @return [Array<Sensorpush::Sample>] list of sample objects
     # @raise [ParseError] if the API response cannot be parsed
     # @raise [APIError] if the HTTP request fails
@@ -184,7 +185,7 @@ module Sensorpush
       body = { sensors: [id] }
       body[:limit] = limit if limit
       body[:startTime] = format_time(start_time) if start_time
-      body[:endTime] = format_time(end_time) if end_time
+      body[:stopTime] = format_time(end_time) if end_time
 
       response = api_post('/samples', body)
 

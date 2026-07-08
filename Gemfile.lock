@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sensorpush (3.0.0)
+    sensorpush (0.2.0)
 
 GEM
   remote: https://rubygems.org/

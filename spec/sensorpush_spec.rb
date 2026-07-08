@@ -5,12 +5,12 @@ require 'spec_helper'
 RSpec.describe Sensorpush do
   it 'has a version number' do
     expect(Sensorpush::VERSION).not_to be_nil
-    expect(Sensorpush::VERSION).to eq('3.0.0')
+    expect(Sensorpush::VERSION).to eq('0.2.0')
   end
 
   it 'has semantic version components' do
-    expect(Sensorpush::MAJOR).to eq('3')
-    expect(Sensorpush::MINOR).to eq('0')
+    expect(Sensorpush::MAJOR).to eq('0')
+    expect(Sensorpush::MINOR).to eq('2')
     expect(Sensorpush::PATCH).to eq('0')
   end
 
