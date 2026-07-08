@@ -281,7 +281,7 @@ RSpec.describe Sensorpush::Client do
               sensors: [sensor_id],
               limit: limit,
               startTime: start_time.iso8601,
-              endTime: end_time.iso8601
+              stopTime: end_time.iso8601
             }.to_json,
             headers: { 'Authorization' => access_token, 'Content-Type' => 'application/json',
                        'Accept' => 'application/json' }
@@ -296,8 +296,17 @@ RSpec.describe Sensorpush::Client do
             sensors: [sensor_id],
             limit: limit,
             startTime: start_time.iso8601,
-            endTime: end_time.iso8601
+            stopTime: end_time.iso8601
           }.to_json)
+      end
+
+      it 'sends the end_time keyword as the stopTime API parameter' do
+        client.samples(sensor_id, limit: limit, start_time: start_time, end_time: end_time)
+        matcher = have_requested(:post, samples_url).with do |request|
+          body = JSON.parse(request.body)
+          body.key?('stopTime') && !body.key?('endTime')
+        end
+        expect(WebMock).to matcher
       end
     end
 
@@ -346,6 +355,20 @@ RSpec.describe Sensorpush::Client do
         expect { client.samples('sensor_abc') }.to raise_error(Sensorpush::APIError) do |error|
           expect(error.status).to eq(500)
           expect(error.api_message).to eq('Internal server error')
+        end
+      end
+    end
+
+    context 'with a rate-limited response' do
+      before do
+        stub_request(:post, samples_url)
+          .to_return(status: 429, body: '{"status": 429, "message": "Too many requests"}')
+      end
+
+      it 'raises an APIError carrying the status and API message' do
+        expect { client.samples('sensor_abc') }.to raise_error(Sensorpush::APIError, /429/) do |error|
+          expect(error.status).to eq(429)
+          expect(error.api_message).to eq('Too many requests')
         end
       end
     end

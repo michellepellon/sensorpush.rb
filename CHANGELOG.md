@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1]
+
+### Fixed
+- `samples` now sends the API's `stopTime` parameter for the `end_time`
+  keyword. It previously sent `endTime`, which the API silently ignores (the
+  official Swagger definition names the parameter `stopTime`), so the upper
+  bound of a requested time range never applied. The Ruby-side `end_time:`
+  keyword is unchanged.
+
 ## [3.0.0]
 
 Requires Ruby 4.0.0 or higher.
